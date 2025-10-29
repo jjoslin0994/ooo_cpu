@@ -62,8 +62,38 @@ package cpu_design_params;
 
   // ---- rename_unit tasks ---- 
   task automatic free_list_pop(
-    intout logic [PRN_WIDTH - 1 : 0] free_list [MAX_FREE_REGS]
+    inout prnt          free_list [MAX_FREE_REGS],
+    inout logic [4:0]   head_ptr,
+    inout prn_t         p_out,
+    inout logic         valid
   );
+
+    if (head_ptr != ) begin
+      p_out     = free_list[head_ptr];
+      head_ptr  = head_ptr + 1;
+      valid     = 1'b1;
+    end
+    else begin
+      p_out = '0;
+      valid = 1'b0;
+    end
+
+  endtask
+
+  task automatic free_list_push(
+    inout prn_t   free_list [MAX_FREE_REGS],
+    inout logic [4:0]                 head_ptr,   
+    inout prn_t                       p_in,
+    inout logic                       stored
+  );
+
+    if(head_ptr < MAX_FREE_REGS) begin
+      head_ptr            = head_ptr + 1;
+      free_list[head_ptr] = p_in;
+      stored              = 1'b1;
+    end else begin
+      stored = 1'b0;
+    end
 
   endtask
 

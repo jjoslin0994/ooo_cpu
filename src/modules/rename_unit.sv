@@ -20,14 +20,13 @@ end
 // loads from max index (NUM_PREGS - NUM_A_REGS - 1)
 // pop give p_reg at head 
 
-logic [PRN_WIDTH - 1 : 0] free_list [MAX_FREE_REGS];
+prn_t free_list [MAX_FREE_REGS];
 logic [4:0] head_ptr;
-logic []
 
 always_ff @(posedge clk or negedge rst_n) begin
   if(!rst_n) begin
     // load the free values in order from init 
-    for (int i = MAX_FREE_REGS - 1; i >= 0; i--) free_list[i] <= i;
+    for (int i = 0; i < MAX_FREE_REGS; i++) free_list[i] <= (i + NUM_A_REGS);
     head_ptr <= '0;
   end
 end
