@@ -1,6 +1,8 @@
 import cpu_design_params::*;
 
-module rename_unit()
+module rename_unit(
+  RenameInterface rename_if
+);
 
 // Register Alias Table
 rat_t rat [NUM_A_REGS];
@@ -15,22 +17,39 @@ always_ff @( posedge clk or negedge rst_n ) begin : blockName
 end
 
 // Free List
-// a lifi with push/pop 
+// a lifo with push/pop 
 // has 48 P_REGS
 // loads from max index free_list[0] = p47, free_list[1] = p46 . . ., free_list[15] = p32
 // pop give p_reg at head 
 
 prn_t free_list [MAX_FREE_REGS];
-logic [4:0] head_ptr;
+free_list_ptr sp;
+logic empty, full;
+logic needs_prn;
+logic
 
-always_ff @(posedge clk or negedge rst_n) begin
+always_comb begin : free_list
+  full = sp == MAX_FREE_REGS;
+  empty = sp == '0;
+  nees_push = rob_if.commit_valid && rob_if.commit_p_old != '0;
+  needs_prn = rename_if.valid && rename_if.has_dest && (rename_if.dest_arch != '0);
+end
+
+
+always_ff @(posedge clk or negedge rst_n) begin : Free_list_controller
   if(!rst_n) begin
     // load the free values in order from init 
     for (int i = MAX_FREE_REGS - 1; i >= 0 ; i--) free_list[i] <= (NUM_A_REGS + i);
-    head_ptr <= MAX_FREE_REGS - 1;
+    sp <= MAX_FREE_REGS;
   end
   else begin  
-    if()
+    if(needs_push) begin
+
+    end
+
+    if(needs_prn) begin
+
+    end
   end
 end
 

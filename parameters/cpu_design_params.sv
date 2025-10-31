@@ -10,9 +10,10 @@ package cpu_design_params;
   localparam int PRN_WIDTH    = $clog2(NUM_P_REGS);
   localparam int ARN_WIDTH    = $clog2(NUM_A_REGS);
   localparam int ROB_IDX_WDTH = $clog2(ROB_SIZE); 
-  localparam int F_LIST_WDTH  = $clog2(MAX_FREE_REGS);
+  
 
   localparam int MAX_FREE_REGS = NUM_P_REGS - NUM_A_REGS; // 48 - 32 = 16
+  localparam int F_LIST_WDTH  = $clog2(MAX_FREE_REGS);
 
   // ---- Rename History ----
   parameter int HIST_DPTH = ROB_SIZE;
@@ -26,6 +27,7 @@ package cpu_design_params;
   typedef logic [ROB_IDX_WDTH - 1 : 0]  rob_idx_t;    // rob index
   typedef logic [3:0]                   op_t;         // opcode
   typedef logic [DATA_WIDTH - 1 : 0]    operand_t;
+  typedef logic [F_LIST_WDTH : 0]       free_list_ptr;
 
 
   typedef struct packed {
@@ -70,7 +72,7 @@ package cpu_design_params;
 
     
   );
-    if(!(rd_arch == '0 && p_new == '0)) begin
+    if(!(rd_arch == '0 || p_new == '0)) begin
       p_old         = rat[rd_arch];
       rat[rd_arch]  = p_new;
       updated = 1'b1;
@@ -82,14 +84,14 @@ package cpu_design_params;
 
   task automatic free_list_pop(
     inout prnt          free_list [MAX_FREE_REGS],
-    inout logic [4:0]   head_ptr,
+    inout free_list_ptr sp,
     inout prn_t         p_out,
     inout logic         valid
   );
 
-    if (head_ptr != ) begin
-      p_out     = free_list[head_ptr];
-      head_ptr  = head_ptr--;
+    if (sp != '0) begin
+      p_out     = free_list[sp];
+      sp  = sp--;
       valid     = 1'b1;
     end
     else begin
@@ -101,14 +103,14 @@ package cpu_design_params;
 
   task automatic free_list_push(
     inout prn_t   free_list [MAX_FREE_REGS],
-    inout logic [4:0]                 head_ptr,   
+    inout free_list_ptr               sp,   
     inout prn_t                       p_in,
     inout logic                       stored
   );
 
-    if(head_ptr < MAX_FREE_REGS) begin
-      head_ptr            = head_ptr++;
-      free_list[head_ptr] = p_in;
+    if(sp < MAX_FREE_REGS) begin
+      sp            = sp++;
+      free_list[sp] = p_in;
       stored              = 1'b1;
     end else begin
       stored = 1'b0;
