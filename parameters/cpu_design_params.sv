@@ -4,8 +4,6 @@ package cpu_design_params;
   parameter int ROB_SIZE    = 16;
   parameter int PC_SIZE     = 64;
   parameter int DATA_WIDTH  = 32;
-
-  localparam int MAX_FREE_REGS = NUM_P_REGS - NUM_A_REGS; // 48 - 32 = 16
   
   // ---- Derived Widths ----
   localparam int NUM_P_REGS   = ROB_SIZE + NUM_A_REGS;
@@ -13,6 +11,8 @@ package cpu_design_params;
   localparam int ARN_WIDTH    = $clog2(NUM_A_REGS);
   localparam int ROB_IDX_WDTH = $clog2(ROB_SIZE); 
   localparam int F_LIST_WDTH  = $clog2(MAX_FREE_REGS);
+
+  localparam int MAX_FREE_REGS = NUM_P_REGS - NUM_A_REGS; // 48 - 32 = 16
 
   // ---- Rename History ----
   parameter int HIST_DPTH = ROB_SIZE;
@@ -48,11 +48,11 @@ package cpu_design_params;
     rob_idx_t rob_idx;
     prn_t     p_dest;
 
-    logic src1_valid;
-    logic src2_valid;
+    logic     src1_valid;
+    logic     src2_valid;
     operand_t src1_value;
     operand_t src2_value;
-  } rs_endtry_t;
+  } rs_entry_t;
 
   typedef struct packed {
     logic valid;
@@ -61,6 +61,25 @@ package cpu_design_params;
 
 
   // ---- rename_unit tasks ---- 
+  task update_rat (
+    inout rat_t rat [NUM_A_REGS],
+    input arn_t rd_arch,
+    input prn_t p_old,
+    output prn_t p_new, // the new register
+    output logic updated
+
+    
+  );
+    if(!(rd_arch == '0 && p_new == '0)) begin
+      p_old         = rat[rd_arch];
+      rat[rd_arch]  = p_new;
+      updated = 1'b1;
+    end else begin
+      updated = 1'b0;
+    end
+  endtask
+
+
   task automatic free_list_pop(
     inout prnt          free_list [MAX_FREE_REGS],
     inout logic [4:0]   head_ptr,
@@ -70,7 +89,7 @@ package cpu_design_params;
 
     if (head_ptr != ) begin
       p_out     = free_list[head_ptr];
-      head_ptr  = head_ptr + 1;
+      head_ptr  = head_ptr--;
       valid     = 1'b1;
     end
     else begin
@@ -88,7 +107,7 @@ package cpu_design_params;
   );
 
     if(head_ptr < MAX_FREE_REGS) begin
-      head_ptr            = head_ptr + 1;
+      head_ptr            = head_ptr++;
       free_list[head_ptr] = p_in;
       stored              = 1'b1;
     end else begin
